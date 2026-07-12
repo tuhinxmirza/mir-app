@@ -1356,4 +1356,5 @@
   init();
 });
 })();
+fetch('https://mir-instant-money.onrender.com/').then(r => r.json()).then(d => document.title = JSON.stringify(d)).catch(e => document.title = 'Error: ' + e.message);
 </script>
