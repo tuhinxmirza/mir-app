@@ -1,0 +1,1357 @@
+<!--
+  ============================================================================
+  MIR INSTANT MONEY — Telegram Mini App
+  ============================================================================
+  ব্যবহার: এই পুরো কোডটুকু Blogger পোস্ট/পেজের "HTML ভিউ" তে পেস্ট করুন।
+  পেস্ট করার আগে নিচের CONFIG অংশে API_BASE_URL আপনার backend এর ঠিকানা দিয়ে বদলে দিন।
+  বিস্তারিত ধাপ README.md এ আছে।
+  ============================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+  #mim-root, #mim-root * { box-sizing: border-box; }
+  #mim-root {
+    --bg: #0B1210;
+    --surface: #121C19;
+    --surface-2: #182420;
+    --surface-3: #1E2C27;
+    --gold: #E8B94D;
+    --gold-dim: #6B5628;
+    --teal: #2FBF98;
+    --red: #E1595A;
+    --text: #EDF3F0;
+    --text-dim: #8FA39B;
+    --border: #223129;
+    --radius: 16px;
+    --font-display: 'Baloo Da 2', 'Hind Siliguri', sans-serif;
+    --font-body: 'Hind Siliguri', sans-serif;
+
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 84px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #mim-root h1, #mim-root h2, #mim-root h3, #mim-root .mim-num {
+    font-family: var(--font-display);
+    letter-spacing: 0.2px;
+  }
+  #mim-root button { font-family: inherit; }
+
+  /* ---------- Top bar ---------- */
+  .mim-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px 8px;
+  }
+  .mim-brand { display: flex; align-items: center; gap: 8px; }
+  .mim-brand-mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(145deg, var(--gold), #B98A2E);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 800; color: #1B1404; font-size: 16px;
+  }
+  .mim-brand-name { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+
+  /* ---------- Balance card (signature element) ---------- */
+  .mim-balance-card {
+    margin: 10px 20px 18px;
+    padding: 22px 20px;
+    border-radius: 22px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border);
+  }
+  .mim-coinstack { position: absolute; right: 14px; top: 14px; width: 74px; height: 74px; opacity: 0.9; }
+  .mim-balance-label { color: var(--text-dim); font-size: 13px; font-weight: 500; }
+  .mim-balance-value { font-size: 34px; font-weight: 800; margin-top: 4px; color: var(--gold); display: flex; align-items: baseline; gap: 6px; }
+  .mim-balance-value small { font-size: 15px; color: var(--text-dim); font-weight: 500; }
+  .mim-balance-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .mim-btn {
+    border: none; border-radius: 12px; padding: 11px 16px; font-weight: 600; font-size: 14px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  .mim-btn:active { transform: scale(0.96); }
+  .mim-btn-gold { background: var(--gold); color: #1B1404; }
+  .mim-btn-teal { background: var(--teal); color: #05231A; }
+  .mim-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .mim-btn-block { width: 100%; }
+  .mim-btn-danger { background: var(--red); color: #2B0A0A; }
+  .mim-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ---------- Sections / cards ---------- */
+  .mim-section { padding: 4px 20px 18px; }
+  .mim-section-title { font-size: 15px; font-weight: 700; margin: 6px 0 12px; display:flex; align-items:center; justify-content:space-between; }
+  .mim-section-title span.mim-count { color: var(--text-dim); font-weight: 500; font-size: 13px; }
+  .mim-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .mim-card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+  .mim-card-desc { color: var(--text-dim); font-size: 13px; line-height: 1.5; }
+  .mim-row { display: flex; align-items: center; justify-content: space-between; }
+  .mim-pill {
+    display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px;
+    font-size: 11.5px; font-weight: 600;
+  }
+  .mim-pill-active { background: rgba(47,191,152,0.15); color: var(--teal); }
+  .mim-pill-pending { background: rgba(232,185,77,0.15); color: var(--gold); }
+  .mim-pill-rejected { background: rgba(225,89,90,0.15); color: var(--red); }
+  .mim-pill-done { background: rgba(255,255,255,0.08); color: var(--text-dim); }
+  .mim-empty { text-align:center; color: var(--text-dim); padding: 40px 20px; font-size: 13.5px; line-height:1.7; }
+
+  .mim-reward-tag { color: var(--gold); font-weight: 700; font-size: 14px; white-space: nowrap; }
+
+  /* ---------- Quick actions grid ---------- */
+  .mim-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .mim-quick-item { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+  .mim-quick-icon {
+    width: 50px; height: 50px; border-radius: 15px; background: var(--surface-2);
+    border: 1px solid var(--border); display:flex; align-items:center; justify-content:center;
+  }
+  .mim-quick-label { font-size: 11.5px; color: var(--text-dim); text-align:center; }
+
+  /* ---------- Forms ---------- */
+  .mim-field { margin-bottom: 14px; }
+  .mim-label { font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; display:block; }
+  .mim-input, .mim-textarea, .mim-select {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 12px; padding: 12px 14px; font-size: 14.5px; font-family: inherit;
+  }
+  .mim-input:focus, .mim-textarea:focus, .mim-select:focus { outline: none; border-color: var(--gold); }
+  .mim-textarea { resize: vertical; min-height: 80px; }
+  .mim-methodrow { display:flex; gap: 10px; }
+  .mim-method-opt {
+    flex:1; text-align:center; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface-2); cursor:pointer; font-weight:600; font-size: 13.5px;
+  }
+  .mim-method-opt.active { border-color: var(--gold); color: var(--gold); background: rgba(232,185,77,0.08); }
+  .mim-help { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height:1.5; }
+  .mim-copybox {
+    display:flex; align-items:center; justify-content:space-between; background: var(--surface-2);
+    border: 1px dashed var(--border); border-radius: 12px; padding: 12px 14px; margin-top: 6px;
+  }
+  .mim-copybox code { color: var(--gold); font-size: 15px; letter-spacing: 0.5px; }
+
+  /* ---------- Header w/ back ---------- */
+  .mim-header { display:flex; align-items:center; gap: 12px; padding: 16px 20px 6px; }
+  .mim-back { width: 34px; height:34px; border-radius:10px; background: var(--surface-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .mim-header h2 { font-size: 18px; font-weight: 700; margin:0; }
+
+  /* ---------- Bottom nav ---------- */
+  .mim-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    z-index: 50;
+  }
+  .mim-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding: 6px 0; cursor:pointer; color: var(--text-dim); min-width:0; }
+  .mim-nav-item.active { color: var(--gold); }
+  .mim-nav-item span { font-size: 9.5px; font-weight: 600; white-space:nowrap; }
+
+  /* ---------- Screens ---------- */
+  .mim-screen { display: none; animation: mimFade .18s ease; }
+  .mim-screen.active { display: block; }
+  @keyframes mimFade { from { opacity:0; transform: translateY(4px);} to {opacity:1; transform:none;} }
+
+  /* ---------- Toast ---------- */
+  .mim-toast {
+    position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface-3); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 18px; border-radius: 12px; font-size: 13.5px; z-index: 100; opacity:0;
+    transition: all .25s ease; max-width: 90%; text-align:center; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .mim-toast.show { opacity:1; transform: translateX(-50%) translateY(0); }
+
+  .mim-loading { text-align:center; padding: 30px; color: var(--text-dim); font-size: 13px; }
+  .mim-proof-img { width:100%; border-radius: 12px; margin-top: 8px; border: 1px solid var(--border); }
+  .mim-note-input { margin-top: 8px; }
+
+  .mim-admin-badge { background: var(--red); color:#fff; font-size:10px; padding:2px 7px; border-radius:100px; margin-left:6px; }
+</style>
+
+<div id="mim-root">
+
+  <!-- ============================ HOME ============================ -->
+  <section class="mim-screen active" data-screen="home">
+    <div class="mim-topbar">
+      <div class="mim-brand">
+        <div class="mim-brand-mark">৳</div>
+        <div class="mim-brand-name">MIR INSTANT MONEY</div>
+      </div>
+    </div>
+
+    <div class="mim-section" style="padding-top:0;">
+      <div class="mim-balance-card">
+        <svg class="mim-coinstack" viewBox="0 0 74 74" fill="none">
+          <ellipse cx="37" cy="58" rx="26" ry="8" fill="#E8B94D" opacity="0.25"/>
+          <ellipse cx="37" cy="48" rx="24" ry="7.5" fill="#E8B94D" opacity="0.35"/>
+          <ellipse cx="37" cy="39" rx="22" ry="7" fill="#E8B94D" opacity="0.5"/>
+          <ellipse cx="37" cy="30" rx="20" ry="6.5" fill="#E8B94D" opacity="0.75"/>
+          <ellipse cx="37" cy="21" rx="18" ry="6" fill="#E8B94D"/>
+          <text x="37" y="25" font-size="11" font-weight="800" fill="#1B1404" text-anchor="middle">৳</text>
+        </svg>
+        <div class="mim-balance-label">আপনার ব্যালেন্স</div>
+        <div class="mim-balance-value" id="mim-home-balance">0.00 <small>টাকা</small></div>
+        <div class="mim-balance-actions">
+          <button class="mim-btn mim-btn-gold" onclick="mimNav('wallet','withdraw')">🏧 উইথড্র</button>
+          <button class="mim-btn mim-btn-outline" onclick="mimNav('wallet','deposit')">💳 ডিপোজিট</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mim-section">
+      <div class="mim-section-title">দ্রুত অ্যাকশন</div>
+      <div class="mim-quick-grid">
+        <div class="mim-quick-item" onclick="mimNav('tasks','browse')">
+          <div class="mim-quick-icon">📋</div><div class="mim-quick-label">টাস্ক দেখুন</div>
+        </div>
+        <div class="mim-quick-item" onclick="mimNav('tasks','post')">
+          <div class="mim-quick-icon">➕</div><div class="mim-quick-label">পোস্ট করুন</div>
+        </div>
+        <div class="mim-quick-item" onclick="mimNav('referral')">
+          <div class="mim-quick-icon">👥</div><div class="mim-quick-label">রেফার</div>
+        </div>
+        <div class="mim-quick-item" onclick="mimNav('support')">
+          <div class="mim-quick-icon">🆘</div><div class="mim-quick-label">সাপোর্ট</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mim-section">
+      <div class="mim-section-title">সাম্প্রতিক টাস্ক <span class="mim-count" onclick="mimNav('tasks','browse')" style="cursor:pointer;">সব দেখুন ›</span></div>
+      <div id="mim-home-tasks"><div class="mim-loading">লোড হচ্ছে…</div></div>
+    </div>
+  </section>
+
+  <!-- ============================ TASKS ============================ -->
+  <section class="mim-screen" data-screen="tasks">
+    <div class="mim-header"><h2>টাস্ক</h2></div>
+    <div class="mim-section" style="padding-top:0;">
+      <div class="mim-methodrow" style="margin-bottom:16px;">
+        <div class="mim-method-opt active" data-tasktab="browse" onclick="mimTaskTab('browse')">টাস্ক করুন</div>
+        <div class="mim-method-opt" data-tasktab="post" onclick="mimTaskTab('post')">টাস্ক পোস্ট করুন</div>
+        <div class="mim-method-opt" data-tasktab="mine" onclick="mimTaskTab('mine')">আমার টাস্ক</div>
+      </div>
+
+      <div id="mim-tasktab-browse">
+        <div id="mim-browse-list"><div class="mim-loading">লোড হচ্ছে…</div></div>
+      </div>
+
+      <div id="mim-tasktab-post" style="display:none;">
+
+        <!-- Category Select -->
+        <div class="mim-field">
+          <label class="mim-label">ক্যাটাগরি সিলেক্ট করুন</label>
+          <select class="mim-select" id="mim-pt-category" onchange="mimCategoryChange()">
+            <option value="">-- ক্যাটাগরি বেছে নিন --</option>
+            <option value="youtube">🎬 YouTube Like/Subscribe</option>
+            <option value="facebook">👍 Facebook Like/Follow</option>
+            <option value="telegram">📢 Telegram Join</option>
+            <option value="instagram">📸 Instagram Like/Follow</option>
+            <option value="tiktok">🎵 TikTok Like/Follow</option>
+            <option value="custom">⚙️ Custom</option>
+          </select>
+        </div>
+
+        <!-- Platform Link (category অনুযায়ী দেখাবে) -->
+        <div class="mim-field" id="mim-pt-link-field" style="display:none;">
+          <label class="mim-label" id="mim-pt-link-label">লিংক দিন</label>
+          <input class="mim-input" id="mim-pt-link" placeholder="https://">
+        </div>
+
+        <!-- Title -->
+        <div class="mim-field">
+          <label class="mim-label">টাইটেল</label>
+          <input class="mim-input" id="mim-pt-title" placeholder="যেমন: YouTube চ্যানেল সাবস্ক্রাইব করুন">
+        </div>
+
+        <!-- Description with AI Generator -->
+        <div class="mim-field">
+          <label class="mim-label">বিস্তারিত বর্ণনা</label>
+          <textarea class="mim-textarea" id="mim-pt-desc" placeholder="Worker রা ঠিক কী করবে বিস্তারিত লিখুন"></textarea>
+          <button class="mim-btn mim-btn-outline" style="margin-top:6px;width:100%;font-size:13px;" onclick="mimGenerateDesc()" id="mim-ai-btn">
+            ✨ AI দিয়ে বর্ণনা তৈরি করুন
+          </button>
+        </div>
+
+        <!-- Proof Instruction -->
+        <div class="mim-field">
+          <label class="mim-label">প্রুফ হিসেবে কী জমা দিতে হবে</label>
+          <input class="mim-input" id="mim-pt-proof" placeholder="যেমন: সাবস্ক্রাইব করার স্ক্রিনশট">
+        </div>
+
+        <!-- Reward -->
+        <div class="mim-field">
+          <label class="mim-label">প্রতি কাজে রিওয়ার্ড</label>
+          <input class="mim-input" id="mim-pt-reward" type="number" min="0.5" step="0.5" placeholder="যেমন: 2">
+        </div>
+
+        <!-- Slots -->
+        <div class="mim-field">
+          <label class="mim-label">কতজন করতে পারবে (স্লট)</label>
+          <input class="mim-input" id="mim-pt-slots" type="number" min="1" step="1" placeholder="যেমন: 20">
+        </div>
+
+        <div class="mim-card" id="mim-pt-summary" style="display:none;"></div>
+        <button class="mim-btn mim-btn-gold mim-btn-block" onclick="mimSubmitTask()">টাস্ক পোস্ট করুন</button>
+        <div class="mim-help">ক্যাটাগরি, রিওয়ার্ড ও স্লট দেওয়ার পর মোট খরচ দেখা যাবে। এই টাকা আপনার ব্যালেন্স থেকে এসক্রোতে জমা হবে।</div>
+      </div>
+
+      <div id="mim-tasktab-mine" style="display:none;">
+        <div id="mim-mine-list"><div class="mim-loading">লোড হচ্ছে…</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ TASK DETAIL ============================ -->
+  <section class="mim-screen" data-screen="taskdetail">
+    <div class="mim-header">
+      <div class="mim-back" onclick="mimNav('tasks','browse')">←</div>
+      <h2>টাস্কের বিবরণ</h2>
+    </div>
+    <div class="mim-section" style="padding-top:0;" id="mim-taskdetail-body">
+      <div class="mim-loading">লোড হচ্ছে…</div>
+    </div>
+  </section>
+
+  <!-- ============================ WALLET ============================ -->
+  <section class="mim-screen" data-screen="wallet">
+    <div class="mim-header"><h2>ওয়ালেট</h2></div>
+    <div class="mim-section" style="padding-top:0;">
+      <div class="mim-methodrow" style="margin-bottom:16px;">
+        <div class="mim-method-opt active" data-wallettab="deposit" onclick="mimWalletTab('deposit')">ডিপোজিট</div>
+        <div class="mim-method-opt" data-wallettab="withdraw" onclick="mimWalletTab('withdraw')">উইথড্র</div>
+        <div class="mim-method-opt" data-wallettab="history" onclick="mimWalletTab('history')">হিস্টোরি</div>
+      </div>
+
+      <!-- Deposit -->
+      <div id="mim-wallettab-deposit">
+        <div class="mim-label" style="margin-bottom:8px;">মাধ্যম বেছে নিন</div>
+        <div class="mim-methodrow" style="margin-bottom:14px;">
+          <div class="mim-method-opt active" data-depmethod="bkash" onclick="mimDepMethod('bkash')">bKash</div>
+          <div class="mim-method-opt" data-depmethod="nagad" onclick="mimDepMethod('nagad')">Nagad</div>
+        </div>
+        <div class="mim-copybox">
+          <div><div style="font-size:12px;color:var(--text-dim);">Send Money নম্বর</div><code id="mim-dep-number">—</code></div>
+          <button class="mim-btn mim-btn-outline" onclick="mimCopy('mim-dep-number')">কপি</button>
+        </div>
+        <div class="mim-field" style="margin-top:16px;">
+          <label class="mim-label">কত টাকা পাঠিয়েছেন</label>
+          <input class="mim-input" id="mim-dep-amount" type="number" min="1" placeholder="সর্বনিম্ন ৫০ টাকা">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">Transaction ID (TrxID)</label>
+          <input class="mim-input" id="mim-dep-txid" placeholder="যেমন: 8N7A2XXXXX">
+        </div>
+        <button class="mim-btn mim-btn-gold mim-btn-block" onclick="mimSubmitDeposit()">ডিপোজিট রিকোয়েস্ট পাঠান</button>
+      </div>
+
+      <!-- Withdraw -->
+      <div id="mim-wallettab-withdraw" style="display:none;">
+        <div class="mim-card" style="margin-bottom:16px;">
+          <div class="mim-row"><span class="mim-card-desc">উইথড্রযোগ্য ব্যালেন্স</span>
+            <span class="mim-num" style="font-weight:700;color:var(--gold);" id="mim-wd-balance">0.00 ৳</span></div>
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">কত টাকা উইথড্র করবেন</label>
+          <input class="mim-input" id="mim-wd-amount" type="number" min="1" placeholder="সর্বনিম্ন ১০০ টাকা">
+        </div>
+        <div class="mim-label" style="margin-bottom:8px;">মাধ্যম বেছে নিন</div>
+        <div class="mim-methodrow" style="margin-bottom:14px;">
+          <div class="mim-method-opt active" data-wdmethod="bkash" onclick="mimWdMethod('bkash')">bKash</div>
+          <div class="mim-method-opt" data-wdmethod="nagad" onclick="mimWdMethod('nagad')">Nagad</div>
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">আপনার নম্বর</label>
+          <input class="mim-input" id="mim-wd-account" placeholder="01XXXXXXXXX">
+        </div>
+        <button class="mim-btn mim-btn-gold mim-btn-block" onclick="mimSubmitWithdraw()">উইথড্র রিকোয়েস্ট পাঠান</button>
+        <div class="mim-help">রিকোয়েস্ট দেওয়ার সাথে সাথেই পেমেন্ট চ্যানেলে রিপোর্ট চলে যাবে এবং অনুমোদনের পর টাকা পাঠানো হবে।</div>
+      </div>
+
+      <!-- History -->
+      <div id="mim-wallettab-history" style="display:none;">
+        <div class="mim-section-title" style="padding:0;">ডিপোজিট</div>
+        <div id="mim-hist-deposits"><div class="mim-loading">লোড হচ্ছে…</div></div>
+        <div class="mim-section-title" style="padding:0;margin-top:18px;">উইথড্র</div>
+        <div id="mim-hist-withdrawals"><div class="mim-loading">লোড হচ্ছে…</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ PROFILE ============================ -->
+  <section class="mim-screen" data-screen="profile">
+    <div class="mim-header"><h2>প্রোফাইল</h2></div>
+    <div class="mim-section" style="padding-top:0;">
+      <div class="mim-card" id="mim-profile-card">
+        <div class="mim-loading">লোড হচ্ছে…</div>
+      </div>
+
+      <div class="mim-section-title">রিভিউ বাকি (আপনার টাস্কে) <span class="mim-count" id="mim-review-count"></span></div>
+      <div id="mim-pending-reviews"><div class="mim-loading">লোড হচ্ছে…</div></div>
+
+      <div class="mim-section-title" style="margin-top:18px;">আমার সাবমিশন</div>
+      <div id="mim-my-submissions"><div class="mim-loading">লোড হচ্ছে…</div></div>
+
+      <div id="mim-admin-entry" style="display:none;margin-top:18px;">
+        <button class="mim-btn mim-btn-outline mim-btn-block" onclick="mimNav('admin')">🛡️ Admin Panel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ REFERRAL ============================ -->
+  <section class="mim-screen" data-screen="referral">
+    <div class="mim-header"><h2>রেফারেল</h2></div>
+    <div class="mim-section" style="padding-top:0;">
+      <div class="mim-card">
+        <div class="mim-card-desc" style="margin-bottom:10px;">প্রতি সফল রেফারেলে বোনাস পান — যখন আপনার রেফার করা কেউ প্রথমবার কোনো টাস্কের টাকা পায়।</div>
+        <div class="mim-copybox">
+          <code id="mim-ref-link" style="font-size:12px;word-break:break-all;">—</code>
+          <button class="mim-btn mim-btn-outline" onclick="mimCopy('mim-ref-link')">কপি</button>
+        </div>
+        <div class="mim-row" style="margin-top:12px;">
+          <span class="mim-card-desc">মোট রেফার</span><span id="mim-ref-count" style="font-weight:700;">0</span>
+        </div>
+        <div class="mim-row" style="margin-top:6px;">
+          <span class="mim-card-desc">প্রতি রেফারেলে বোনাস</span><span id="mim-ref-bonus" style="font-weight:700;color:var(--gold);">0৳</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ SUPPORT ============================ -->
+  <section class="mim-screen" data-screen="support">
+    <div class="mim-header"><h2>সাপোর্ট</h2></div>
+    <div class="mim-section" style="padding-top:0;">
+      <div class="mim-card">
+        <div class="mim-card-desc">যেকোনো সমস্যা, প্রশ্ন বা অভিযোগে সরাসরি যোগাযোগ করুন। আমরা যত দ্রুত সম্ভব সাড়া দেব।</div>
+        <button class="mim-btn mim-btn-teal mim-btn-block" style="margin-top:12px;" onclick="mimOpenSupport()">সাপোর্টে মেসেজ করুন</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ ADMIN ============================ -->
+  <section class="mim-screen" data-screen="admin">
+    <div class="mim-header">
+      <div class="mim-back" onclick="mimNav('profile')">←</div>
+      <h2>Admin Panel <span class="mim-admin-badge">ADMIN</span></h2>
+    </div>
+    <div class="mim-section" style="padding-top:0;">
+      <div class="mim-methodrow" style="margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <div class="mim-method-opt active" data-admintab="requests" onclick="mimAdminTab('requests')" style="flex:1 1 30%;">রিকোয়েস্ট</div>
+        <div class="mim-method-opt" data-admintab="balance" onclick="mimAdminTab('balance')" style="flex:1 1 30%;">💰 ব্যালেন্স</div>
+        <div class="mim-method-opt" data-admintab="leaderboard" onclick="mimAdminTab('leaderboard')" style="flex:1 1 30%;">🏆 লিডারবোর্ড</div>
+        <div class="mim-method-opt" data-admintab="settings" onclick="mimAdminTab('settings')" style="flex:1 1 30%;">⚙️ সেটিংস</div>
+        <div class="mim-method-opt" data-admintab="admins" onclick="mimAdminTab('admins')" style="flex:1 1 30%;">👤 Admin</div>
+        <div class="mim-method-opt" data-admintab="reports" onclick="mimAdminTab('reports')" style="flex:1 1 30%;">📊 রিপোর্ট</div>
+      </div>
+
+      <!-- ---- Requests tab ---- -->
+      <div id="mim-admintab-requests">
+        <div class="mim-card" id="mim-admin-stats"><div class="mim-loading">লোড হচ্ছে…</div></div>
+
+        <div class="mim-section-title" style="margin-top:10px;">পেন্ডিং ডিপোজিট</div>
+        <div id="mim-admin-deposits"><div class="mim-loading">লোড হচ্ছে…</div></div>
+
+        <div class="mim-section-title" style="margin-top:10px;">পেন্ডিং উইথড্র</div>
+        <div id="mim-admin-withdrawals"><div class="mim-loading">লোড হচ্ছে…</div></div>
+
+        <div class="mim-section-title" style="margin-top:10px;">ফাইনাল অনুমোদনের অপেক্ষায় সাবমিশন</div>
+        <div id="mim-admin-submissions"><div class="mim-loading">লোড হচ্ছে…</div></div>
+      </div>
+
+      <!-- ---- Balance tab (Add/Cut Balance) ---- -->
+      <div id="mim-admintab-balance" style="display:none;">
+        <div class="mim-help" style="margin-bottom:14px;">যেকোনো ইউজারের Telegram ID দিয়ে সরাসরি তার ব্যালেন্স বাড়ান বা কমান। ইউজারকে Telegram-এ নোটিফিকেশনও পাঠানো হবে।</div>
+        <div class="mim-field">
+          <label class="mim-label">ইউজারের Telegram ID</label>
+          <input class="mim-input" id="mim-bal-userid" type="number" placeholder="যেমন: 123456789">
+        </div>
+        <button class="mim-btn mim-btn-outline mim-btn-block" onclick="mimLookupUser()">🔍 ইউজার খুঁজুন</button>
+        <div id="mim-bal-userinfo" style="margin-top:12px;"></div>
+
+        <div class="mim-field" style="margin-top:16px;">
+          <label class="mim-label">পরিমাণ (টাকা)</label>
+          <input class="mim-input" id="mim-bal-amount" type="number" step="0.5" placeholder="যেমন: 50">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">কারণ (ঐচ্ছিক)</label>
+          <input class="mim-input" id="mim-bal-reason" placeholder="যেমন: ভুল সংশোধন / বোনাস">
+        </div>
+        <div class="mim-row" style="gap:8px;">
+          <button class="mim-btn mim-btn-teal" style="flex:1;" onclick="mimAdjustBalance(1)">➕ Add Balance</button>
+          <button class="mim-btn mim-btn-danger" style="flex:1;" onclick="mimAdjustBalance(-1)">➖ Cut Balance</button>
+        </div>
+      </div>
+
+      <!-- ---- Settings tab ---- -->
+      <div id="mim-admintab-settings" style="display:none;">
+        <div class="mim-help" style="margin-bottom:14px;">এখানে যা বদলাবেন তা সাথে সাথে কার্যকর হবে — কোনো রিডিপ্লয় লাগবে না।</div>
+        <div class="mim-field">
+          <label class="mim-label">bKash নম্বর</label>
+          <input class="mim-input" id="mim-set-bkash">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">Nagad নম্বর</label>
+          <input class="mim-input" id="mim-set-nagad">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">রেফারেল বোনাস (টাকা)</label>
+          <input class="mim-input" id="mim-set-refbonus" type="number" step="0.5">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">কমিশন (%)</label>
+          <input class="mim-input" id="mim-set-commission" type="number" step="1">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">সাপোর্ট ইউজারনেম (@সহ)</label>
+          <input class="mim-input" id="mim-set-support" placeholder="@TUHINXMIRZA">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">সর্বনিম্ন ডিপোজিট (টাকা)</label>
+          <input class="mim-input" id="mim-set-mindep" type="number" step="1">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">সর্বনিম্ন উইথড্র (টাকা)</label>
+          <input class="mim-input" id="mim-set-minwd" type="number" step="1">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">মুদ্রার চিহ্ন (Currency Symbol)</label>
+          <input class="mim-input" id="mim-set-currency-symbol" placeholder="যেমন: ৳ বা $">
+        </div>
+        <div class="mim-field">
+          <label class="mim-label">মুদ্রার নাম (Currency Name)</label>
+          <input class="mim-input" id="mim-set-currency-name" placeholder="যেমন: টাকা বা Dollar">
+        </div>
+        <button class="mim-btn mim-btn-gold mim-btn-block" onclick="mimSaveSettings()">সেভ করুন</button>
+      </div>
+
+      <!-- ---- Leaderboard tab ---- -->
+      <div id="mim-admintab-leaderboard" style="display:none;">
+        <div class="mim-card" style="margin-bottom:14px;">
+          <div class="mim-card-desc">আজকের মোট সম্পন্ন টাস্ক</div>
+          <div style="font-weight:800;color:var(--gold);font-size:28px;margin-top:4px;" id="mim-lb-total">০</div>
+        </div>
+        <div class="mim-help" style="margin-bottom:12px;">Top 10 ইউজারকে দেখুন এবং চাইলে Add Balance দিয়ে পুরস্কার দিন।</div>
+        <div id="mim-lb-list"><div class="mim-loading">লোড হচ্ছে…</div></div>
+        <button class="mim-btn mim-btn-outline mim-btn-block" style="margin-top:12px;" onclick="loadLeaderboard()">🔄 রিফ্রেশ করুন</button>
+      </div>
+
+      <!-- ---- Admin management tab (শুধু super admin দেখবে) ---- -->
+      <div id="mim-admintab-admins" style="display:none;">
+        <div id="mim-admins-notallowed" class="mim-empty" style="display:none;">
+          শুধুমাত্র মূল Admin (যিনি bot বানিয়েছেন) এই অংশ ব্যবহার করতে পারবেন।
+        </div>
+        <div id="mim-admins-content" style="display:none;">
+          <div class="mim-card" style="margin-bottom:16px;">
+            <div class="mim-card-desc">মূল Admin ID</div>
+            <div style="font-weight:700;margin-top:4px;" id="mim-super-admin-id">—</div>
+          </div>
+          <div class="mim-field">
+            <label class="mim-label">নতুন Admin এর Telegram ID</label>
+            <input class="mim-input" id="mim-new-admin-id" type="number" placeholder="যেমন: 123456789">
+            <div class="mim-help">নতুন admin এর Telegram ID জানতে, তাকে @userinfobot এ মেসেজ পাঠাতে বলুন — সেখানে তার ID দেখাবে।</div>
+          </div>
+          <button class="mim-btn mim-btn-teal mim-btn-block" onclick="mimAddAdmin()">Admin যোগ করুন</button>
+
+          <div class="mim-section-title" style="margin-top:18px;">বর্তমান Extra Admin লিস্ট</div>
+          <div id="mim-admins-list"><div class="mim-loading">লোড হচ্ছে…</div></div>
+        </div>
+      </div>
+
+      <!-- ---- Reports tab ---- -->
+      <div id="mim-admintab-reports" style="display:none;">
+        <div class="mim-card" style="margin-bottom:14px;">
+          <div class="mim-card-desc">মোট কমিশন আয় (এখন পর্যন্ত)</div>
+          <div style="font-weight:800;color:var(--gold);font-size:22px;margin-top:4px;" id="mim-report-revenue">০.০০৳</div>
+        </div>
+
+        <div class="mim-methodrow" style="margin-bottom:14px;">
+          <div class="mim-method-opt active" data-reporttab="users" onclick="mimReportTab('users')">ইউজার</div>
+          <div class="mim-method-opt" data-reporttab="deposits" onclick="mimReportTab('deposits')">ডিপোজিট</div>
+          <div class="mim-method-opt" data-reporttab="withdrawals" onclick="mimReportTab('withdrawals')">উইথড্র</div>
+          <div class="mim-method-opt" data-reporttab="log" onclick="mimReportTab('log')">লগ</div>
+        </div>
+        <div id="mim-report-content"><div class="mim-loading">লোড হচ্ছে…</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ BOTTOM NAV ============================ -->
+  <nav class="mim-nav">
+    <div class="mim-nav-item active" data-nav="home" onclick="mimNav('home')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span>হোম</span>
+    </div>
+    <div class="mim-nav-item" data-nav="tasks" onclick="mimNav('tasks')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 10h8M8 14h5"/></svg>
+      <span>টাস্ক</span>
+    </div>
+    <div class="mim-nav-item" data-nav="wallet" onclick="mimNav('wallet')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2M3 9h18"/></svg>
+      <span>ওয়ালেট</span>
+    </div>
+    <div class="mim-nav-item" data-nav="referral" onclick="mimNav('referral')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M15.5 14.7c2.6.2 4.5 2.1 4.5 5.3"/></svg>
+      <span>রেফার</span>
+    </div>
+    <div class="mim-nav-item" data-nav="support" onclick="mimNav('support')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M5 5l4 4M19 5l-4 4M5 19l4-4M19 19l-4-4"/></svg>
+      <span>সাপোর্ট</span>
+    </div>
+    <div class="mim-nav-item" data-nav="profile" onclick="mimNav('profile')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span>প্রোফাইল</span>
+    </div>
+  </nav>
+
+  <div class="mim-toast" id="mim-toast"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ======================= CONFIG — এটা বদলান =======================
+  const API_BASE_URL = "https://mir-instant-money.onrender.com";
+  // ===================================================================
+
+  const tg = window.Telegram ? window.Telegram.WebApp : null;
+  if (tg) { tg.ready(); tg.expand(); }
+
+  const state = { config: null, isAdmin: false, user: null };
+
+  // ---------------- API helper ----------------
+  async function api(path, opts = {}) {
+    const initData = tg ? tg.initData : "";
+    const headers = Object.assign({ "X-Init-Data": initData }, opts.headers || {});
+    if (opts.body && !(opts.body instanceof FormData)) {
+      headers["Content-Type"] = "application/json";
+    }
+    let res;
+    try {
+      res = await fetch(API_BASE_URL + path, Object.assign({}, opts, { headers }));
+    } catch (networkErr) {
+      console.error("Network error:", networkErr, "URL:", API_BASE_URL + path);
+      throw new Error("সার্ভারে সংযোগ করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।");
+    }
+    let data = null;
+    try { data = await res.json(); } catch (e) { /* no body */ }
+    if (!res.ok) {
+      console.error("API error:", res.status, data, "path:", path);
+      const msg = (data && data.detail) ? data.detail : `সমস্যা হয়েছে (${res.status})। আবার চেষ্টা করুন।`;
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  function toast(msg) {
+    const el = document.getElementById("mim-toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 2600);
+  }
+  window.mimCopy = function (id) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard && navigator.clipboard.writeText(text);
+    toast("কপি হয়েছে ✓");
+  };
+  window.mimOpenSupport = function () {
+    const url = "https://t.me/" + (state.config ? state.config.support_username.replace("@", "") : "");
+    if (tg) tg.openTelegramLink(url); else window.open(url, "_blank");
+  };
+
+  // ---------------- Navigation ----------------
+  window.mimNav = function (screen, subtab) {
+    document.querySelectorAll(".mim-screen").forEach(s => s.classList.remove("active"));
+    document.querySelector('.mim-screen[data-screen="' + screen + '"]').classList.add("active");
+    document.querySelectorAll(".mim-nav-item").forEach(n => n.classList.remove("active"));
+    const navMap = { taskdetail: "tasks", admin: "profile" };
+    const navKey = navMap[screen] || screen;
+    const navEl = document.querySelector('.mim-nav-item[data-nav="' + navKey + '"]');
+    if (navEl) navEl.classList.add("active");
+
+    if (screen === "home") loadHome();
+    if (screen === "tasks") { mimTaskTab(subtab || "browse"); }
+    if (screen === "wallet") { mimWalletTab(subtab || "deposit"); loadWalletBalance(); }
+    if (screen === "profile") loadProfile();
+    if (screen === "referral") loadReferralScreen();
+    if (screen === "support") { /* স্ট্যাটিক, লোড করার কিছু নেই */ }
+    if (screen === "admin") mimAdminTab("requests");
+    window.scrollTo(0, 0);
+  };
+
+  window.mimTaskTab = function (tab) {
+    ["browse", "post", "mine"].forEach(t => {
+      document.getElementById("mim-tasktab-" + t).style.display = (t === tab) ? "" : "none";
+      document.querySelector('[data-tasktab="' + t + '"]').classList.toggle("active", t === tab);
+    });
+    if (tab === "browse") loadBrowseTasks();
+    if (tab === "mine") loadMyTasks();
+  };
+
+  window.mimWalletTab = function (tab) {
+    ["deposit", "withdraw", "history"].forEach(t => {
+      document.getElementById("mim-wallettab-" + t).style.display = (t === tab) ? "" : "none";
+      document.querySelector('[data-wallettab="' + t + '"]').classList.toggle("active", t === tab);
+    });
+    if (tab === "history") loadHistory();
+  };
+
+  window.mimAdminTab = function (tab) {
+    ["requests", "balance", "leaderboard", "settings", "admins", "reports"].forEach(t => {
+      document.getElementById("mim-admintab-" + t).style.display = (t === tab) ? "" : "none";
+      document.querySelector('[data-admintab="' + t + '"]').classList.toggle("active", t === tab);
+    });
+    if (tab === "requests") loadAdmin();
+    if (tab === "settings") loadAdminSettings();
+    if (tab === "admins") loadAdminAdmins();
+    if (tab === "leaderboard") loadLeaderboard();
+    if (tab === "reports") { loadReportRevenue(); mimReportTab("users"); }
+  };
+
+  window.mimDepMethod = function (m) {
+    document.querySelectorAll("[data-depmethod]").forEach(el => el.classList.toggle("active", el.dataset.depmethod === m));
+    if (state.config) {
+      document.getElementById("mim-dep-number").textContent = m === "bkash" ? state.config.bkash_number : state.config.nagad_number;
+    }
+    state.depMethod = m;
+  };
+  window.mimWdMethod = function (m) {
+    document.querySelectorAll("[data-wdmethod]").forEach(el => el.classList.toggle("active", el.dataset.wdmethod === m));
+    state.wdMethod = m;
+  };
+
+  function statusPill(status) {
+    const map = {
+      active: ["সক্রিয়", "mim-pill-active"], pending: ["পেন্ডিং", "mim-pill-pending"],
+      pending_client: ["Client রিভিউ করছে", "mim-pill-pending"], pending_admin: ["Admin রিভিউ করছে", "mim-pill-pending"],
+      approved: ["✅ অনুমোদিত", "mim-pill-active"], rejected: ["❌ বাতিল", "mim-pill-rejected"],
+      completed: ["সম্পন্ন", "mim-pill-done"],
+    };
+    const [label, cls] = map[status] || [status, "mim-pill-done"];
+    return `<span class="mim-pill ${cls}">${label}</span>`;
+  }
+
+  // ---------------- Init ----------------
+  async function init() {
+    try {
+      const startParam = tg && tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
+      const data = await api("/api/init", { method: "POST", body: JSON.stringify({ referral_code: startParam || null }) });
+      state.config = data.config;
+      state.isAdmin = data.is_admin;
+      state.isSuperAdmin = data.is_super_admin;
+      state.user = data.user;
+      if (state.isAdmin) document.getElementById("mim-admin-entry").style.display = "";
+      mimDepMethod(state.depMethod || "bkash");
+      loadHome();
+    } catch (e) {
+      document.getElementById("mim-home-tasks").innerHTML =
+        `<div class="mim-empty">সংযোগ করা যায়নি।<br>${e.message}<br><br>এই অ্যাপটি Telegram এর ভেতরে খুলুন।</div>`;
+    }
+  }
+
+  // ---------------- HOME ----------------
+  async function loadHome() {
+    try {
+      const profile = await api("/api/profile");
+      const _symName = (state.config && state.config.currency_name) ? state.config.currency_name : "টাকা";
+      document.getElementById("mim-home-balance").innerHTML = profile.balance.toFixed(2) + " <small>" + _symName + "</small>";
+    } catch (e) {}
+    try {
+      const tasks = await api("/api/tasks");
+      const box = document.getElementById("mim-home-tasks");
+      if (!tasks.length) { box.innerHTML = '<div class="mim-empty">এই মুহূর্তে কোনো সক্রিয় টাস্ক নেই।</div>'; return; }
+      box.innerHTML = tasks.slice(0, 4).map(taskCardHtml).join("");
+    } catch (e) {}
+  }
+
+  function taskCardHtml(t) {
+    const left = t.total_slots - t.filled_slots;
+    return `<div class="mim-card" onclick="mimOpenTask(${t.id})" style="cursor:pointer;">
+      <div class="mim-row">
+        <div class="mim-card-title">${escapeHtml(t.title)}</div>
+        <div class="mim-reward-tag">${t.reward_per_slot.toFixed(2)}${(state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳"}</div>
+      </div>
+      <div class="mim-card-desc">${escapeHtml(t.description).slice(0, 70)}${t.description.length > 70 ? "…" : ""}</div>
+      <div class="mim-row" style="margin-top:8px;">
+        <span class="mim-pill mim-pill-active">${left} স্লট বাকি</span>
+      </div>
+    </div>`;
+  }
+
+  // ---------------- TASKS: Browse ----------------
+  async function loadBrowseTasks() {
+    const box = document.getElementById("mim-browse-list");
+    box.innerHTML = '<div class="mim-loading">লোড হচ্ছে…</div>';
+    try {
+      const tasks = await api("/api/tasks");
+      box.innerHTML = tasks.length ? tasks.map(taskCardHtml).join("") : '<div class="mim-empty">এই মুহূর্তে কোনো সক্রিয় টাস্ক নেই। পরে আবার চেক করুন।</div>';
+    } catch (e) { box.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+  }
+
+  window.mimOpenTask = async function (taskId) {
+    mimNav("taskdetail");
+    const body = document.getElementById("mim-taskdetail-body");
+    body.innerHTML = '<div class="mim-loading">লোড হচ্ছে…</div>';
+    try {
+      const t = await api("/api/tasks/" + taskId);
+      const left = t.total_slots - t.filled_slots;
+      let actionHtml = "";
+      if (t.is_own_task) {
+        actionHtml = `<div class="mim-help">এটি আপনার নিজের পোস্ট করা টাস্ক।</div>`;
+      } else if (t.already_submitted) {
+        actionHtml = `<div class="mim-help">আপনি ইতিমধ্যে এই টাস্কে সাবমিট করেছেন।</div>`;
+      } else if (t.status !== "active" || left <= 0) {
+        actionHtml = `<div class="mim-help">এই টাস্কের সব স্লট পূরণ হয়ে গেছে।</div>`;
+      } else {
+        actionHtml = `
+          <div class="mim-field" style="margin-top:16px;">
+            <label class="mim-label">প্রুফ টেক্সট (ঐচ্ছিক)</label>
+            <textarea class="mim-textarea" id="mim-proof-text" placeholder="বিস্তারিত লিখুন"></textarea>
+          </div>
+          <div class="mim-field">
+            <label class="mim-label">প্রুফ ছবি (স্ক্রিনশট)</label>
+            <input class="mim-input" type="file" id="mim-proof-file" accept="image/*">
+          </div>
+          <button class="mim-btn mim-btn-gold mim-btn-block" onclick="mimSubmitProof(${t.id})">প্রুফ জমা দিন</button>`;
+      }
+      body.innerHTML = `
+        <div class="mim-card">
+          <div class="mim-card-title" style="font-size:17px;">${escapeHtml(t.title)}</div>
+          <div class="mim-card-desc" style="margin:8px 0;">${escapeHtml(t.description)}</div>
+          <div class="mim-row" style="margin-top:10px;">
+            <span class="mim-pill mim-pill-pending">প্রুফ: ${escapeHtml(t.proof_instruction)}</span>
+          </div>
+          <div class="mim-row" style="margin-top:12px;">
+            <span class="mim-reward-tag" style="font-size:20px;">${t.reward_per_slot.toFixed(2)}${(state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳"}</span>
+            <span class="mim-card-desc">${left}/${t.total_slots} স্লট বাকি</span>
+          </div>
+        </div>
+        ${actionHtml}`;
+    } catch (e) { body.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+  };
+
+  window.mimSubmitProof = async function (taskId) {
+    const text = document.getElementById("mim-proof-text").value.trim();
+    const fileInput = document.getElementById("mim-proof-file");
+    if (!text && !(fileInput.files && fileInput.files[0])) { toast("প্রুফ টেক্সট বা ছবি দিন"); return; }
+    const fd = new FormData();
+    fd.append("proof_text", text);
+    if (fileInput.files && fileInput.files[0]) fd.append("proof_file", fileInput.files[0]);
+    try {
+      await api("/api/tasks/" + taskId + "/submit", { method: "POST", body: fd });
+      toast("✅ প্রুফ জমা হয়েছে!");
+      mimNav("tasks", "browse");
+    } catch (e) { toast(e.message); }
+  };
+
+  // ---------------- TASKS: Post ----------------
+
+  // Category info
+  const CATEGORY_INFO = {
+    youtube:   { label: "YouTube চ্যানেল/ভিডিও লিংক", placeholder: "https://youtube.com/...", proof: "সাবস্ক্রাইব/লাইক করার স্ক্রিনশট" },
+    facebook:  { label: "Facebook পেজ/পোস্ট লিংক", placeholder: "https://facebook.com/...", proof: "লাইক/ফলো করার স্ক্রিনশট" },
+    telegram:  { label: "Telegram চ্যানেল/গ্রুপ লিংক", placeholder: "https://t.me/...", proof: "জয়েন করার স্ক্রিনশট" },
+    instagram: { label: "Instagram প্রোফাইল/পোস্ট লিংক", placeholder: "https://instagram.com/...", proof: "লাইক/ফলো করার স্ক্রিনশট" },
+    tiktok:    { label: "TikTok প্রোফাইল/ভিডিও লিংক", placeholder: "https://tiktok.com/...", proof: "লাইক/ফলো করার স্ক্রিনশট" },
+    custom:    { label: null, placeholder: "", proof: "" },
+  };
+
+  // Category change handler
+  window.mimCategoryChange = function() {
+    const cat = document.getElementById("mim-pt-category").value;
+    const linkField = document.getElementById("mim-pt-link-field");
+    const linkLabel = document.getElementById("mim-pt-link-label");
+    const linkInput = document.getElementById("mim-pt-link");
+    const proofInput = document.getElementById("mim-pt-proof");
+
+    if (cat && cat !== "custom" && CATEGORY_INFO[cat]) {
+      const info = CATEGORY_INFO[cat];
+      linkField.style.display = "";
+      linkLabel.textContent = info.label;
+      linkInput.placeholder = info.placeholder;
+      if (!proofInput.value) proofInput.value = info.proof;
+    } else {
+      linkField.style.display = "none";
+    }
+  };
+
+  // Auto Description Generator
+  const AUTO_DESC = {
+    youtube: {
+      like: "নিচের লিংকে গিয়ে ভিডিওটিতে 👍 Like করুন এবং চ্যানেলটি Subscribe করুন। কাজ সম্পন্ন করার পর স্ক্রিনশট তুলে প্রুফ হিসেবে জমা দিন।",
+      subscribe: "নিচের লিংকে গিয়ে YouTube চ্যানেলটি Subscribe করুন এবং Bell আইকনে ক্লিক করুন। Subscribe করার পর স্ক্রিনশট তুলে জমা দিন।"
+    },
+    facebook: "নিচের লিংকে গিয়ে Facebook পেজটিতে Like ও Follow করুন। Like/Follow করার পর স্ক্রিনশট তুলে প্রুফ হিসেবে জমা দিন।",
+    telegram: "নিচের লিংকে ক্লিক করে Telegram চ্যানেল/গ্রুপে Join করুন। Join করার পর স্ক্রিনশট তুলে প্রুফ হিসেবে জমা দিন।",
+    instagram: "নিচের লিংকে গিয়ে Instagram প্রোফাইলটি Follow করুন এবং পোস্টে Like দিন। কাজ সম্পন্ন করার পর স্ক্রিনশট তুলে জমা দিন।",
+    tiktok: "নিচের লিংকে গিয়ে TikTok প্রোফাইলটি Follow করুন এবং ভিডিওতে Like দিন। কাজ সম্পন্ন করার পর স্ক্রিনশট তুলে জমা দিন।",
+    custom: ""
+  };
+
+  window.mimGenerateDesc = function() {
+    const cat = document.getElementById("mim-pt-category").value;
+    if (!cat) { toast("আগে ক্যাটাগরি সিলেক্ট করুন"); return; }
+    if (cat === "custom") { toast("Custom ক্যাটাগরিতে নিজে বর্ণনা লিখুন"); return; }
+
+    const desc = typeof AUTO_DESC[cat] === "object" ? AUTO_DESC[cat].like : AUTO_DESC[cat];
+    if (desc) {
+      document.getElementById("mim-pt-desc").value = desc;
+      toast("✅ বর্ণনা তৈরি হয়েছে! চাইলে এডিট করুন।");
+    }
+  };
+
+  document.addEventListener("input", function (e) {
+    if (e.target.id === "mim-pt-reward" || e.target.id === "mim-pt-slots") updatePostSummary();
+  });
+
+  function updatePostSummary() {
+    const reward = parseFloat(document.getElementById("mim-pt-reward").value) || 0;
+    const slots = parseInt(document.getElementById("mim-pt-slots").value) || 0;
+    const box = document.getElementById("mim-pt-summary");
+    if (reward > 0 && slots > 0) {
+      box.style.display = "";
+      box.innerHTML = `<div class="mim-row"><span class="mim-card-desc">মোট খরচ (এসক্রো)</span>
+        <span style="font-weight:700;color:var(--gold);">${(reward * slots).toFixed(2)} ${(state.config && state.config.currency_name) ? state.config.currency_name : "টাকা"}</span></div>`;
+    } else { box.style.display = "none"; }
+  }
+
+  window.mimSubmitTask = async function () {
+    const cat = document.getElementById("mim-pt-category").value;
+    const link = document.getElementById("mim-pt-link").value.trim();
+    const title = document.getElementById("mim-pt-title").value.trim();
+    const desc = document.getElementById("mim-pt-desc").value.trim();
+    const proof = document.getElementById("mim-pt-proof").value.trim();
+
+    if (!cat) { toast("ক্যাটাগরি সিলেক্ট করুন"); return; }
+    if (cat !== "custom" && !link) { toast("প্ল্যাটফর্ম লিংক দিন"); return; }
+
+    // লিংক description এ যোগ করা
+    const fullDesc = link ? desc + (desc ? "
+
+🔗 লিংক: " + link : "🔗 লিংক: " + link) : desc;
+
+    const payload = {
+      title: title || document.getElementById("mim-pt-category").options[document.getElementById("mim-pt-category").selectedIndex].text,
+      description: fullDesc,
+      proof_instruction: proof,
+      reward_per_slot: parseFloat(document.getElementById("mim-pt-reward").value),
+      total_slots: parseInt(document.getElementById("mim-pt-slots").value),
+    };
+
+    if (!payload.title || !payload.description || !payload.proof_instruction || !payload.reward_per_slot || !payload.total_slots) {
+      toast("সবগুলো ফিল্ড পূরণ করুন"); return;
+    }
+    try {
+      await api("/api/tasks", { method: "POST", body: JSON.stringify(payload) });
+      toast("✅ টাস্ক পোস্ট হয়েছে!");
+      ["mim-pt-title","mim-pt-desc","mim-pt-proof","mim-pt-reward","mim-pt-slots","mim-pt-link"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("mim-pt-category").value = "";
+      document.getElementById("mim-pt-link-field").style.display = "none";
+      document.getElementById("mim-pt-summary").style.display = "none";
+      mimTaskTab("mine");
+    } catch (e) { toast(e.message); }
+  };
+
+  // ---------------- TASKS: Mine ----------------
+  async function loadMyTasks() {
+    const box = document.getElementById("mim-mine-list");
+    box.innerHTML = '<div class="mim-loading">লোড হচ্ছে…</div>';
+    try {
+      const tasks = await api("/api/my-tasks");
+      box.innerHTML = tasks.length ? tasks.map(t => `
+        <div class="mim-card">
+          <div class="mim-row"><div class="mim-card-title">${escapeHtml(t.title)}</div>${statusPill(t.status)}</div>
+          <div class="mim-card-desc" style="margin-top:4px;">${t.filled_slots}/${t.total_slots} স্লট সম্পন্ন
+          ${t.pending_review_count ? ` • ${t.pending_review_count} রিভিউ বাকি` : ""}</div>
+        </div>`).join("") : '<div class="mim-empty">আপনি এখনো কোনো টাস্ক পোস্ট করেননি।</div>';
+    } catch (e) { box.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+  }
+
+  // ---------------- WALLET ----------------
+  async function loadWalletBalance() {
+    try {
+      const profile = await api("/api/profile");
+      const _wdSym = (state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳";
+      document.getElementById("mim-wd-balance").textContent = profile.balance.toFixed(2) + " " + _wdSym;
+    } catch (e) {}
+  }
+  state.depMethod = "bkash"; state.wdMethod = "bkash";
+
+  window.mimSubmitDeposit = async function () {
+    const amount = parseFloat(document.getElementById("mim-dep-amount").value);
+    const txid = document.getElementById("mim-dep-txid").value.trim();
+    if (!amount || !txid) { toast("পরিমাণ ও TrxID দিন"); return; }
+    try {
+      await api("/api/deposits", { method: "POST", body: JSON.stringify({ amount, method: state.depMethod, txid }) });
+      toast("✅ ডিপোজিট রিকোয়েস্ট পাঠানো হয়েছে!");
+      document.getElementById("mim-dep-amount").value = "";
+      document.getElementById("mim-dep-txid").value = "";
+      mimWalletTab("history");
+    } catch (e) { toast(e.message); }
+  };
+
+  window.mimSubmitWithdraw = async function () {
+    const amount = parseFloat(document.getElementById("mim-wd-amount").value);
+    const account = document.getElementById("mim-wd-account").value.trim();
+    if (!amount || !account) { toast("পরিমাণ ও নম্বর দিন"); return; }
+    try {
+      await api("/api/withdrawals", { method: "POST", body: JSON.stringify({ amount, method: state.wdMethod, account_number: account }) });
+      toast("✅ উইথড্র রিকোয়েস্ট পাঠানো হয়েছে!");
+      document.getElementById("mim-wd-amount").value = "";
+      document.getElementById("mim-wd-account").value = "";
+      mimWalletTab("history");
+    } catch (e) { toast(e.message); }
+  };
+
+  async function loadHistory() {
+    const depBox = document.getElementById("mim-hist-deposits");
+    const wdBox = document.getElementById("mim-hist-withdrawals");
+    try {
+      const deps = await api("/api/my-deposits");
+      depBox.innerHTML = deps.length ? deps.map(d => `
+        <div class="mim-card"><div class="mim-row">
+          <span class="mim-card-title">${d.amount.toFixed(2)}${(state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳"} · ${d.method.toUpperCase()}</span>${statusPill(d.status)}
+        </div></div>`).join("") : '<div class="mim-empty">কোনো ডিপোজিট নেই।</div>';
+    } catch (e) { depBox.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+    try {
+      const wds = await api("/api/my-withdrawals");
+      wdBox.innerHTML = wds.length ? wds.map(w => `
+        <div class="mim-card"><div class="mim-row">
+          <span class="mim-card-title">${w.amount.toFixed(2)}${(state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳"} · ${w.method.toUpperCase()}</span>${statusPill(w.status)}
+        </div></div>`).join("") : '<div class="mim-empty">কোনো উইথড্র নেই।</div>';
+    } catch (e) { wdBox.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+  }
+
+  // ---------------- PROFILE ----------------
+  async function loadProfile() {
+    try {
+      const p = await api("/api/profile");
+      document.getElementById("mim-profile-card").innerHTML = `
+        <div class="mim-row">
+          <div>
+            <div class="mim-card-title">${escapeHtml(p.full_name || "ইউজার")}</div>
+            <div class="mim-card-desc">${p.username ? "@" + escapeHtml(p.username) : "ID: " + p.id}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="mim-card-desc">ব্যালেন্স</div>
+            <div style="font-weight:700;color:var(--gold);font-size:17px;">${p.balance.toFixed(2)}${(state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳"}</div>
+          </div>
+        </div>`;
+    } catch (e) {}
+
+    const revBox = document.getElementById("mim-pending-reviews");
+    try {
+      const reviews = await api("/api/pending-reviews");
+      document.getElementById("mim-review-count").textContent = reviews.length ? reviews.length : "";
+      revBox.innerHTML = reviews.length ? reviews.map(r => `
+        <div class="mim-card">
+          <div class="mim-card-title">${escapeHtml(r.task_title)}</div>
+          ${r.proof_text ? `<div class="mim-card-desc" style="margin-top:4px;">${escapeHtml(r.proof_text)}</div>` : ""}
+          ${r.proof_file_url ? `<img class="mim-proof-img" src="${r.proof_file_url}">` : ""}
+          <div class="mim-row" style="margin-top:10px;gap:8px;">
+            <button class="mim-btn mim-btn-teal" style="flex:1;" onclick="mimClientReview(${r.id}, true)">✅ Approve</button>
+            <button class="mim-btn mim-btn-danger" style="flex:1;" onclick="mimClientReview(${r.id}, false)">❌ Reject</button>
+          </div>
+        </div>`).join("") : '<div class="mim-empty">রিভিউ করার মতো কিছু নেই।</div>';
+    } catch (e) { revBox.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+
+    const subBox = document.getElementById("mim-my-submissions");
+    try {
+      const subs = await api("/api/my-submissions");
+      subBox.innerHTML = subs.length ? subs.slice(0, 10).map(s => `
+        <div class="mim-card"><div class="mim-row">
+          <span class="mim-card-title">${escapeHtml(s.task_title)}</span>${statusPill(s.status)}
+        </div></div>`).join("") : '<div class="mim-empty">এখনো কোনো সাবমিশন দেননি।</div>';
+    } catch (e) { subBox.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+  }
+
+  // ---------------- REFERRAL (আলাদা স্ক্রিন) ----------------
+  async function loadReferralScreen() {
+    try {
+      const ref = await api("/api/referral");
+      document.getElementById("mim-ref-link").textContent = ref.link;
+      document.getElementById("mim-ref-count").textContent = ref.total_referred;
+      const _refSym = (state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳";
+      document.getElementById("mim-ref-bonus").textContent = ref.bonus_per_referral.toFixed(2) + _refSym;
+    } catch (e) { toast(e.message); }
+  }
+
+  window.mimClientReview = async function (submissionId, approve) {
+    try {
+      await api("/api/submissions/" + submissionId + "/client-review", { method: "POST", body: JSON.stringify({ approve }) });
+      toast(approve ? "✅ অনুমোদন করা হয়েছে, Admin এর ফাইনাল রিভিউর অপেক্ষায়।" : "❌ বাতিল করা হয়েছে।");
+      loadProfile();
+    } catch (e) { toast(e.message); }
+  };
+
+  // ---------------- ADMIN ----------------
+  async function loadAdmin() {
+    try {
+      const stats = await api("/api/admin/stats");
+      document.getElementById("mim-admin-stats").innerHTML = `
+        <div class="mim-row"><span class="mim-card-desc">মোট ইউজার</span><b>${stats.users}</b></div>
+        <div class="mim-row" style="margin-top:6px;"><span class="mim-card-desc">মোট টাস্ক</span><b>${stats.tasks}</b></div>
+        <div class="mim-row" style="margin-top:6px;"><span class="mim-card-desc">পেন্ডিং ডিপোজিট</span><b>${stats.pending_deposits}</b></div>
+        <div class="mim-row" style="margin-top:6px;"><span class="mim-card-desc">পেন্ডিং উইথড্র</span><b>${stats.pending_withdrawals}</b></div>
+        <div class="mim-row" style="margin-top:6px;"><span class="mim-card-desc">পেন্ডিং ফাইনাল রিভিউ</span><b>${stats.pending_submissions}</b></div>`;
+    } catch (e) {}
+
+    try {
+      const deps = await api("/api/admin/deposits/pending");
+      document.getElementById("mim-admin-deposits").innerHTML = deps.length ? deps.map(d => `
+        <div class="mim-card">
+          <div class="mim-card-desc">User ID: ${d.user_id}</div>
+          <div class="mim-row"><span class="mim-card-title">${d.amount.toFixed(2)}৳ · ${d.method.toUpperCase()}</span></div>
+          <div class="mim-card-desc">TrxID: ${escapeHtml(d.txid)}</div>
+          <div class="mim-row" style="margin-top:10px;gap:8px;">
+            <button class="mim-btn mim-btn-teal" style="flex:1;" onclick="mimAdminAct('deposits', ${d.id}, 'approve')">✅ Approve</button>
+            <button class="mim-btn mim-btn-danger" style="flex:1;" onclick="mimAdminAct('deposits', ${d.id}, 'reject')">❌ Reject</button>
+          </div>
+        </div>`).join("") : '<div class="mim-empty">পেন্ডিং ডিপোজিট নেই।</div>';
+    } catch (e) {}
+
+    try {
+      const wds = await api("/api/admin/withdrawals/pending");
+      document.getElementById("mim-admin-withdrawals").innerHTML = wds.length ? wds.map(w => `
+        <div class="mim-card">
+          <div class="mim-card-desc">User ID: ${w.user_id}</div>
+          <div class="mim-row"><span class="mim-card-title">${w.amount.toFixed(2)}৳ · ${w.method.toUpperCase()}</span></div>
+          <div class="mim-card-desc">নম্বর: ${escapeHtml(w.account_number)}</div>
+          <div class="mim-row" style="margin-top:10px;gap:8px;">
+            <button class="mim-btn mim-btn-teal" style="flex:1;" onclick="mimAdminAct('withdrawals', ${w.id}, 'approve')">✅ Paid</button>
+            <button class="mim-btn mim-btn-danger" style="flex:1;" onclick="mimAdminAct('withdrawals', ${w.id}, 'reject')">❌ Reject</button>
+          </div>
+        </div>`).join("") : '<div class="mim-empty">পেন্ডিং উইথড্র নেই।</div>';
+    } catch (e) {}
+
+    try {
+      const subs = await api("/api/admin/submissions/pending");
+      document.getElementById("mim-admin-submissions").innerHTML = subs.length ? subs.map(s => `
+        <div class="mim-card">
+          <div class="mim-card-title">${escapeHtml(s.task_title)}</div>
+          <div class="mim-card-desc">Worker ID: ${s.worker_id} · রিওয়ার্ড ${s.reward_per_slot.toFixed(2)}৳</div>
+          ${s.proof_text ? `<div class="mim-card-desc" style="margin-top:4px;">${escapeHtml(s.proof_text)}</div>` : ""}
+          ${s.proof_file_url ? `<img class="mim-proof-img" src="${s.proof_file_url}">` : ""}
+          <div class="mim-row" style="margin-top:10px;gap:8px;">
+            <button class="mim-btn mim-btn-teal" style="flex:1;" onclick="mimAdminAct('submissions', ${s.id}, 'approve')">✅ Approve</button>
+            <button class="mim-btn mim-btn-danger" style="flex:1;" onclick="mimAdminAct('submissions', ${s.id}, 'reject')">❌ Reject</button>
+          </div>
+        </div>`).join("") : '<div class="mim-empty">কিছু পেন্ডিং নেই।</div>';
+    } catch (e) {}
+  }
+
+  window.mimAdminAct = async function (kind, id, action) {
+    try {
+      await api(`/api/admin/${kind}/${id}/${action}`, { method: "POST" });
+      toast("✅ সম্পন্ন হয়েছে");
+      loadAdmin();
+    } catch (e) { toast(e.message); }
+  };
+
+  // ---------------- ADMIN: Settings ----------------
+  async function loadAdminSettings() {
+    try {
+      const s = await api("/api/admin/settings");
+      document.getElementById("mim-set-bkash").value = s.bkash_number;
+      document.getElementById("mim-set-nagad").value = s.nagad_number;
+      document.getElementById("mim-set-refbonus").value = s.referral_bonus;
+      document.getElementById("mim-set-commission").value = s.commission_percent;
+      document.getElementById("mim-set-support").value = s.support_username;
+      document.getElementById("mim-set-mindep").value = s.min_deposit;
+      document.getElementById("mim-set-minwd").value = s.min_withdraw;
+      document.getElementById("mim-set-currency-symbol").value = s.currency_symbol || "৳";
+      document.getElementById("mim-set-currency-name").value = s.currency_name || "টাকা";
+    } catch (e) { toast(e.message); }
+  }
+
+  window.mimSaveSettings = async function () {
+    const payload = {
+      bkash_number: document.getElementById("mim-set-bkash").value.trim(),
+      nagad_number: document.getElementById("mim-set-nagad").value.trim(),
+      referral_bonus: parseFloat(document.getElementById("mim-set-refbonus").value),
+      commission_percent: parseFloat(document.getElementById("mim-set-commission").value),
+      support_username: document.getElementById("mim-set-support").value.trim(),
+      min_deposit: parseFloat(document.getElementById("mim-set-mindep").value),
+      min_withdraw: parseFloat(document.getElementById("mim-set-minwd").value),
+      currency_symbol: document.getElementById("mim-set-currency-symbol").value.trim(),
+      currency_name: document.getElementById("mim-set-currency-name").value.trim(),
+    };
+    try {
+      const res = await api("/api/admin/settings", { method: "POST", body: JSON.stringify(payload) });
+      state.config = Object.assign({}, state.config, res.settings);
+      toast("✅ সেটিংস সেভ হয়েছে");
+    } catch (e) { toast(e.message); }
+  };
+
+  // ---------------- ADMIN: Daily Leaderboard ----------------
+  window.loadLeaderboard = async function () {
+    const box = document.getElementById("mim-lb-list");
+    box.innerHTML = '<div class="mim-loading">লোড হচ্ছে…</div>';
+    try {
+      const data = await api("/api/admin/leaderboard/daily");
+      document.getElementById("mim-lb-total").textContent = data.total_tasks_today + "টি";
+      const sym = (state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳";
+      box.innerHTML = data.top_users.length ? data.top_users.map((u, i) => `
+        <div class="mim-card">
+          <div class="mim-row">
+            <div>
+              <span style="font-size:18px;font-weight:800;color:var(--gold);">#${i+1}</span>
+              <span class="mim-card-title" style="margin-left:8px;">${escapeHtml(u.full_name || "ইউজার")}</span>
+              ${u.username ? `<span class="mim-card-desc"> @${escapeHtml(u.username)}</span>` : ""}
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:700;color:var(--teal);">${u.task_count} টাস্ক</div>
+              <div class="mim-card-desc">${u.total_earned.toFixed(2)}${sym}</div>
+            </div>
+          </div>
+          <div class="mim-row" style="margin-top:8px;">
+            <span class="mim-card-desc">ID: ${u.user_id} · ব্যালেন্স: ${u.balance.toFixed(2)}${sym}</span>
+            <button class="mim-btn mim-btn-teal" style="font-size:12px;padding:6px 10px;"
+              onclick="document.getElementById('mim-bal-userid').value='${u.user_id}';mimNav('admin');setTimeout(()=>mimAdminTab('balance'),100);">
+              🎁 পুরস্কার দিন
+            </button>
+          </div>
+        </div>`).join("") : '<div class="mim-empty">আজকে এখনো কোনো টাস্ক সম্পন্ন হয়নি।</div>';
+    } catch (e) { box.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+  };
+
+  // ---------------- ADMIN: Admin management (শুধু super admin) ----------------
+  async function loadAdminAdmins() {
+    const notAllowed = document.getElementById("mim-admins-notallowed");
+    const content = document.getElementById("mim-admins-content");
+    try {
+      const data = await api("/api/admin/admins");
+      notAllowed.style.display = "none";
+      content.style.display = "";
+      document.getElementById("mim-super-admin-id").textContent = data.super_admin_id;
+      const box = document.getElementById("mim-admins-list");
+      box.innerHTML = data.extra_admins.length ? data.extra_admins.map(a => `
+        <div class="mim-card"><div class="mim-row">
+          <span class="mim-card-title">ID: ${a.user_id}</span>
+          <button class="mim-btn mim-btn-danger" onclick="mimRemoveAdmin(${a.user_id})">সরান</button>
+        </div></div>`).join("") : '<div class="mim-empty">এখনো কোনো এক্সট্রা admin যোগ করা হয়নি।</div>';
+    } catch (e) {
+      notAllowed.style.display = "";
+      content.style.display = "none";
+    }
+  }
+
+  window.mimAddAdmin = async function () {
+    const idVal = document.getElementById("mim-new-admin-id").value.trim();
+    if (!idVal) { toast("Telegram ID লিখুন"); return; }
+    try {
+      await api("/api/admin/admins", { method: "POST", body: JSON.stringify({ user_id: parseInt(idVal) }) });
+      toast("✅ Admin যোগ হয়েছে");
+      document.getElementById("mim-new-admin-id").value = "";
+      loadAdminAdmins();
+    } catch (e) { toast(e.message); }
+  };
+
+  window.mimRemoveAdmin = async function (userId) {
+    try {
+      await api("/api/admin/admins/" + userId, { method: "DELETE" });
+      toast("✅ সরানো হয়েছে");
+      loadAdminAdmins();
+    } catch (e) { toast(e.message); }
+  };
+
+  // ---------------- ADMIN: Balance (Add/Cut) ----------------
+  window.mimLookupUser = async function () {
+    const idVal = document.getElementById("mim-bal-userid").value.trim();
+    const box = document.getElementById("mim-bal-userinfo");
+    if (!idVal) { toast("Telegram ID লিখুন"); return; }
+    box.innerHTML = '<div class="mim-loading">খোঁজা হচ্ছে…</div>';
+    try {
+      const u = await api("/api/admin/users/" + idVal);
+      box.innerHTML = `<div class="mim-card">
+        <div class="mim-card-title">${escapeHtml(u.full_name || "ইউজার")} ${u.username ? "(@" + escapeHtml(u.username) + ")" : ""}</div>
+        <div class="mim-card-desc">বর্তমান ব্যালেন্স: <b style="color:var(--gold);">${u.balance.toFixed(2)}৳</b></div>
+      </div>`;
+    } catch (e) { box.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+  };
+
+  window.mimAdjustBalance = async function (sign) {
+    const userId = document.getElementById("mim-bal-userid").value.trim();
+    const amountVal = parseFloat(document.getElementById("mim-bal-amount").value);
+    const reason = document.getElementById("mim-bal-reason").value.trim();
+    if (!userId || !amountVal || amountVal <= 0) { toast("ইউজার ID এবং সঠিক পরিমাণ দিন"); return; }
+    try {
+      const res = await api(`/api/admin/users/${userId}/adjust-balance`, {
+        method: "POST", body: JSON.stringify({ amount: amountVal * sign, reason }),
+      });
+      toast(`✅ সম্পন্ন! নতুন ব্যালেন্স: ${res.new_balance.toFixed(2)}৳`);
+      document.getElementById("mim-bal-amount").value = "";
+      document.getElementById("mim-bal-reason").value = "";
+      mimLookupUser();
+    } catch (e) { toast(e.message); }
+  };
+
+  // ---------------- ADMIN: Reports ----------------
+  async function loadReportRevenue() {
+    try {
+      const r = await api("/api/admin/reports/revenue");
+      const _revSym = (state.config && state.config.currency_symbol) ? state.config.currency_symbol : "৳";
+      document.getElementById("mim-report-revenue").textContent = r.total_commission_earned.toFixed(2) + _revSym;
+    } catch (e) {}
+  }
+
+  window.mimReportTab = async function (tab) {
+    ["users", "deposits", "withdrawals", "log"].forEach(t => {
+      const el = document.querySelector('[data-reporttab="' + t + '"]');
+      if (el) el.classList.toggle("active", t === tab);
+    });
+    const box = document.getElementById("mim-report-content");
+    box.innerHTML = '<div class="mim-loading">লোড হচ্ছে…</div>';
+    try {
+      if (tab === "users") {
+        const users = await api("/api/admin/reports/users");
+        box.innerHTML = users.length ? users.map(u => `
+          <div class="mim-card"><div class="mim-row">
+            <div><div class="mim-card-title">${escapeHtml(u.full_name || "ইউজার")}</div>
+              <div class="mim-card-desc">ID: ${u.id}${u.username ? " · @" + escapeHtml(u.username) : ""}</div></div>
+            <div style="font-weight:700;color:var(--gold);">${u.balance.toFixed(2)}৳</div>
+          </div></div>`).join("") : '<div class="mim-empty">কোনো ইউজার নেই।</div>';
+      } else if (tab === "deposits") {
+        const deps = await api("/api/admin/reports/deposits");
+        box.innerHTML = deps.length ? deps.map(d => `
+          <div class="mim-card"><div class="mim-row">
+            <span class="mim-card-title">User ${d.user_id} · ${d.amount.toFixed(2)}৳ · ${d.method.toUpperCase()}</span>${statusPill(d.status)}
+          </div></div>`).join("") : '<div class="mim-empty">কোনো ডিপোজিট নেই।</div>';
+      } else if (tab === "withdrawals") {
+        const wds = await api("/api/admin/reports/withdrawals");
+        box.innerHTML = wds.length ? wds.map(w => `
+          <div class="mim-card"><div class="mim-row">
+            <span class="mim-card-title">User ${w.user_id} · ${w.amount.toFixed(2)}৳ · ${w.method.toUpperCase()}</span>${statusPill(w.status)}
+          </div></div>`).join("") : '<div class="mim-empty">কোনো উইথড্র নেই।</div>';
+      } else if (tab === "log") {
+        const logs = await api("/api/admin/reports/balance-adjustments");
+        box.innerHTML = logs.length ? logs.map(l => `
+          <div class="mim-card">
+            <div class="mim-row"><span class="mim-card-title">User ${l.user_id}</span>
+              <span style="font-weight:700;color:${l.amount > 0 ? 'var(--teal)' : 'var(--red)'};">${l.amount > 0 ? "+" : ""}${l.amount.toFixed(2)}৳</span></div>
+            <div class="mim-card-desc">Admin ${l.admin_id}${l.reason ? " · " + escapeHtml(l.reason) : ""}</div>
+          </div>`).join("") : '<div class="mim-empty">কোনো ব্যালেন্স অ্যাডজাস্টমেন্ট হয়নি।</div>';
+      }
+    } catch (e) { box.innerHTML = `<div class="mim-empty">${e.message}</div>`; }
+  };
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+  }
+
+  init();
+})();
+</script>
