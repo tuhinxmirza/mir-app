@@ -619,10 +619,7 @@
 </div>
 
 <script>
-(function () {
-  "use strict";
-
-  // ======================= CONFIG — এটা বদলান =======================
+// ======================= CONFIG — এটা বদলান =======================
   const API_BASE_URL = "https://mir-instant-money.onrender.com";
   // ===================================================================
 
@@ -1352,8 +1349,7 @@
     return str.replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
   }
 
-  window.addEventListener('load', function() {
-    init();
-  });
-})();
+  init();
+
+init();
 </script>
