@@ -1352,6 +1352,8 @@
     return str.replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
   }
 
-  init();
+  window.addEventListener('load', function() {
+    init();
+  });
 })();
 </script>
